@@ -22,12 +22,12 @@
   //  Map set-up
   // ────────────────────────────────────────────────
   const view = new View({
-    center: [0, 0],
+    center: fromLonLat([-71.2082, 46.8139]),
     zoom: 1,
   });
 
   /* Moving “restroom” symbol */
-  const startingCoords = [-11.2082, 46.8139];      // lon, lat
+  const startingCoords = [-71.2082, 46.8139];      // lon, lat
   const restroomFeature = new Feature({
     geometry: new Point(fromLonLat(startingCoords)),
     name: "Moving Restroom",
@@ -80,10 +80,11 @@
     /* ------------------------------------------------
        Animation: run inside OL’s own render loop
        ------------------------------------------------*/
-    let last = 0;
+    let last = null;
+    let iter = 0;
     map.on("postrender", (ev) => {
       const now = ev.frameState.time;        // ms since page load
-      // if (!last) return;
+      if (!last) last = now;
       const dt = (now - last) / 1000;        // seconds since last frame      
       console.log(dt)
       if (dt >= 1/30) {
@@ -91,8 +92,9 @@
         const geom = restroomFeature.getGeometry() as Point;
         const coord = toLonLat(geom.getCoordinates());
         coord[0] -= 0.04 * dt;
+        coord[1] += Math.sin(iter) / 250
         geom.setCoordinates(fromLonLat(coord));
-
+        iter += 0.1;
         // tell OL we changed something and schedule next frame
         restroomsLayer.changed();
         last = now;
